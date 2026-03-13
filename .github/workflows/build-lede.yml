@@ -1,0 +1,203 @@
+name: Build LEDE Firmware
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+    inputs:
+      config_file:
+        description: 'Config file to use (optional)'
+        required: false
+        default: ''
+      upload_release:
+        description: 'Upload to release (if tagged)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  CONFIG_FILE: ${{ github.event.inputs.config_file || '' }}
+  UPLOAD_RELEASE: ${{ github.event.inputs.upload_release || 'false' }}
+
+jobs:
+  build:
+    name: Build LEDE Firmware (x86_64)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo -E apt-get update
+          sudo -E apt-get -y install $(curl -fsSL git.io/depends-ubuntu-2204)
+          sudo -E systemctl daemon-reload
+          sudo -E apt-get clean
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Cache Toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build_dir
+            ./staging_dir
+            ./tmp
+            ./dl
+          key: ${{ runner.os }}-lede-x86_64-${{ hashFiles('**/Makefile', '**/Config.in') }}
+          restore-keys: |
+            ${{ runner.os }}-lede-x86_64-
+            ${{ runner.os }}-lede-
+
+      - name: Update Feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Load Custom Config
+        if: env.CONFIG_FILE != ''
+        run: |
+          if [ -f "$CONFIG_FILE" ]; then
+            cp "$CONFIG_FILE" .config
+          else
+            echo "Config file not found: $CONFIG_FILE"
+            exit 1
+          fi
+
+      - name: Generate Config
+        if: env.CONFIG_FILE == ''
+        run: |
+          # Set default config for x86_64
+          echo "CONFIG_TARGET_x86=y" >> .config
+          echo "CONFIG_TARGET_x86_64=y" >> .config
+          echo "CONFIG_TARGET_x86_64_generic=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-igb=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-e1000=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-r8169=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-rt2800-pci=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-ath9k=y" >> .config
+          echo "CONFIG_PACKAGE_luci=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
+          echo "CONFIG_PACKAGE_htop=y" >> .config
+          echo "CONFIG_PACKAGE_vim=y" >> .config
+          echo "CONFIG_PACKAGE_wget=y" >> .config
+          echo "CONFIG_PACKAGE_curl=y" >> .config
+          echo "CONFIG_PACKAGE_iperf3=y" >> .config
+          make defconfig
+
+      - name: Download Packages
+        run: make download -j$(nproc)
+
+      - name: Compile Firmware
+        run: |
+          make -j$(nproc) || make -j1 V=s
+          echo "Build completed successfully!"
+
+      - name: Check Build Results
+        run: |
+          echo "======================="
+          echo "Space usage:"
+          echo "======================="
+          df -h
+          echo "======================="
+          echo "Build artifacts:"
+          echo "======================="
+          find ./bin/targets/ -name "*.bin" -o -name "*.img" -o -name "*.sysupgrade" | head -20
+
+      - name: Prepare Artifacts
+        run: |
+          mkdir -p ./artifact/firmware
+          mkdir -p ./artifact/packages
+          mkdir -p ./artifact/buildinfo
+          mkdir -p ./artifact/logs
+          
+          # Copy firmware files
+          find ./bin/targets/ -type f \( -name "*.bin" -o -name "*.img" -o -name "*.sysupgrade" -o -name "*.factory" \) -exec cp {} ./artifact/firmware/ \;
+          
+          # Copy packages
+          find ./bin/packages/ -name "*.ipk" -exec cp {} ./artifact/packages/ \;
+          
+          # Copy build info
+          find ./bin/targets/ -name "*.buildinfo" -o -name "*.manifest" -exec cp {} ./artifact/buildinfo/ \;
+          
+          # Create file lists
+          ls -la ./artifact/firmware/ > ./artifact/firmware/filelist.txt
+          ls -la ./artifact/packages/ > ./artifact/packages/filelist.txt
+          
+          # Create build summary
+          echo "Build Summary:" > ./artifact/build_summary.txt
+          echo "Target: x86_64" >> ./artifact/build_summary.txt
+          echo "Architecture: x86_64" >> ./artifact/build_summary.txt
+          echo "Build Date: $(date)" >> ./artifact/build_summary.txt
+          echo "Git Commit: ${{ github.sha }}" >> ./artifact/build_summary.txt
+          echo "Firmware Files: $(ls ./artifact/firmware/ | wc -l)" >> ./artifact/build_summary.txt
+          echo "Package Files: $(ls ./artifact/packages/ | wc -l)" >> ./artifact/build_summary.txt
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lede-firmware-x86_64
+          path: ./artifact/firmware/
+          retention-days: 30
+
+      - name: Upload Package Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lede-packages-x86_64
+          path: ./artifact/packages/
+          retention-days: 30
+
+      - name: Upload Build Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: lede-buildinfo-x86_64
+          path: ./artifact/buildinfo/
+          retention-days: 30
+
+      - name: Upload Build Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: lede-summary-x86_64
+          path: ./artifact/build_summary.txt
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/') && env.UPLOAD_RELEASE == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./artifact/firmware/*
+            ./artifact/packages/*
+            ./artifact/buildinfo/*
+            ./artifact/build_summary.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Build Status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Build completed successfully for x86_64"
+            echo "📦 Firmware and packages are available in the artifacts"
+          else
+            echo "❌ Build failed for x86_64"
+            echo "🔍 Check the logs for details"
+          fi
