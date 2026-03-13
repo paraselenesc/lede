@@ -92,6 +92,20 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
+          # Helloworld feed packages
+          echo "CONFIG_PACKAGE_luci-app-v2ray=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-xray=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-trojan=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-ssr-plus=y" >> .config
+          echo "CONFIG_PACKAGE_v2ray-core=y" >> .config
+          echo "CONFIG_PACKAGE_xray-core=y" >> .config
+          echo "CONFIG_PACKAGE_trojan-plus=y" >> .config
+          echo "CONFIG_PACKAGE_naiveproxy=y" >> .config
+          echo "CONFIG_PACKAGE_brook=y" >> .config
+          echo "CONFIG_PACKAGE_redsocks2=y" >> .config
+          echo "CONFIG_PACKAGE_chinadns-ng=y" >> .config
+          echo "CONFIG_PACKAGE_adguardhome=y" >> .config
+          # System utilities
           echo "CONFIG_PACKAGE_htop=y" >> .config
           echo "CONFIG_PACKAGE_vim=y" >> .config
           echo "CONFIG_PACKAGE_wget=y" >> .config
