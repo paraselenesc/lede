@@ -26,7 +26,7 @@ Buy Link ：
 
 1. **Never compile OpenWRT as `root`**
 2. If you are living in mainland China, please make sure you could visit the **REAL** Internet.
-3. Default login IP is `192.168.1.1`, password is `password`.
+3. Default login IP is `192.168.5.1`, password is `password`.
 
 ## How to Compile
 
