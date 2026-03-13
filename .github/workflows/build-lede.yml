@@ -64,6 +64,12 @@ jobs:
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+          # Verify helloworld packages are available
+          echo "=== Available helloworld packages ==="
+          find ./package/helloworld -name "Makefile" -exec dirname {} \; | while read dir; do
+            pkg=$(basename "$dir")
+            echo "- $pkg"
+          done
 
       - name: Load Custom Config
         if: env.CONFIG_FILE != ''
@@ -82,29 +88,39 @@ jobs:
           echo "CONFIG_TARGET_x86=y" >> .config
           echo "CONFIG_TARGET_x86_64=y" >> .config
           echo "CONFIG_TARGET_x86_64_generic=y" >> .config
+          # Network drivers
           echo "CONFIG_PACKAGE_kmod-igb=y" >> .config
           echo "CONFIG_PACKAGE_kmod-e1000=y" >> .config
           echo "CONFIG_PACKAGE_kmod-r8169=y" >> .config
           echo "CONFIG_PACKAGE_kmod-rt2800-pci=y" >> .config
           echo "CONFIG_PACKAGE_kmod-ath9k=y" >> .config
+          # LuCI
           echo "CONFIG_PACKAGE_luci=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
-          # Helloworld feed packages
-          echo "CONFIG_PACKAGE_luci-app-v2ray=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-xray=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-trojan=y" >> .config
+          # Helloworld packages (from package/helloworld feed)
+          # SSR Plus+ (includes shadowsocks, v2ray, xray, trojan support)
           echo "CONFIG_PACKAGE_luci-app-ssr-plus=y" >> .config
+          echo "CONFIG_PACKAGE_luci-i18n-ssr-plus-zh-cn=y" >> .config
+          # Core components for SSR Plus+
+          echo "CONFIG_PACKAGE_shadowsocksr-libev=y" >> .config
+          echo "CONFIG_PACKAGE_shadowsocks-libev=y" >> .config
           echo "CONFIG_PACKAGE_v2ray-core=y" >> .config
           echo "CONFIG_PACKAGE_xray-core=y" >> .config
-          echo "CONFIG_PACKAGE_trojan-plus=y" >> .config
+          echo "CONFIG_PACKAGE_trojan=y" >> .config
           echo "CONFIG_PACKAGE_naiveproxy=y" >> .config
-          echo "CONFIG_PACKAGE_brook=y" >> .config
-          echo "CONFIG_PACKAGE_redsocks2=y" >> .config
+          echo "CONFIG_PACKAGE_hysteria=y" >> .config
+          echo "CONFIG_PACKAGE_tuic-client=y" >> .config
+          # DNS tools
           echo "CONFIG_PACKAGE_chinadns-ng=y" >> .config
-          echo "CONFIG_PACKAGE_adguardhome=y" >> .config
+          echo "CONFIG_PACKAGE_dns2socks=y" >> .config
+          echo "CONFIG_PACKAGE_dns2tcp=y" >> .config
+          echo "CONFIG_PACKAGE_dnsproxy=y" >> .config
+          echo "CONFIG_PACKAGE_mosdns=y" >> .config
+          # Other useful packages
+          echo "CONFIG_PACKAGE_redsocks2=y" >> .config
+          echo "CONFIG_PACKAGE_ipt2socks=y" >> .config
+          echo "CONFIG_PACKAGE_microsocks=y" >> .config
+          echo "CONFIG_PACKAGE_tcping=y" >> .config
           # System utilities
           echo "CONFIG_PACKAGE_htop=y" >> .config
           echo "CONFIG_PACKAGE_vim=y" >> .config
