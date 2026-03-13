@@ -49,7 +49,7 @@ Buy Link ：
 3. Clone the source code, update `feeds` and configure:
 
    ```bash
-   git clone https://github.com/coolsnowwolf/lede
+   git clone https://github.com/paraselenesc/lede
    cd lede
    ./scripts/feeds update -a
    ./scripts/feeds install -a
