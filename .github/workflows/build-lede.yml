@@ -35,6 +35,11 @@ jobs:
           sudo -E apt-get update
           sudo -E apt-get -y install $(curl -fsSL git.io/depends-ubuntu-2204)
           sudo -E apt-get -y install clang lld
+          # Ensure clang++ is available in PATH
+          sudo ln -sf /usr/bin/clang /usr/bin/clang++ || true
+          sudo ln -sf /usr/bin/clang-14 /usr/bin/clang++ || true
+          which clang++ || echo "clang++ not found, checking alternatives..."
+          ls -la /usr/bin/clang* || true
           sudo -E systemctl daemon-reload
           sudo -E apt-get clean
 
