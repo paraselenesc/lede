@@ -34,6 +34,7 @@ jobs:
         run: |
           sudo -E apt-get update
           sudo -E apt-get -y install $(curl -fsSL git.io/depends-ubuntu-2204)
+          sudo -E apt-get -y install clang lld
           sudo -E systemctl daemon-reload
           sudo -E apt-get clean
 
