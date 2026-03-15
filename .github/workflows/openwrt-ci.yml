@@ -119,6 +119,26 @@ jobs:
           echo "CONFIG_PACKAGE_tailscale=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-tailscale=y" >> .config
           echo "CONFIG_PACKAGE_luci-i18n-tailscale-zh-cn=y" >> .config
+          # Network management
+          echo "CONFIG_PACKAGE_luci-app-mwan3=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-nlbwmon=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-nft-qos=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-upnp=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-wol=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-arpbind=y" >> .config
+          # Traffic acceleration
+          echo "CONFIG_PACKAGE_luci-app-flowoffload=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-fullconenat=y" >> .config
+          # USB storage support
+          echo "CONFIG_PACKAGE_kmod-usb3=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-usb-storage=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-usb-storage-uas=y" >> .config
+          echo "CONFIG_PACKAGE_block-mount=y" >> .config
+          # System management
+          echo "CONFIG_PACKAGE_luci-app-ttyd=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-filetransfer=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-autoreboot=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-syslog=y" >> .config
           make defconfig
 
       - name: Download packages
