@@ -141,6 +141,9 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-filetransfer=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-autoreboot=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-syslog=y" >> .config
+          # KMS Server
+          echo "CONFIG_PACKAGE_vlmcsd=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-vlmcsd=y" >> .config
           make defconfig
 
       - name: Download packages
