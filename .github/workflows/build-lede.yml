@@ -133,6 +133,15 @@ jobs:
           echo "CONFIG_PACKAGE_wget=y" >> .config
           echo "CONFIG_PACKAGE_curl=y" >> .config
           echo "CONFIG_PACKAGE_iperf3=y" >> .config
+          # VPN - WireGuard
+          echo "CONFIG_PACKAGE_kmod-wireguard=y" >> .config
+          echo "CONFIG_PACKAGE_wireguard-tools=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
+          echo "CONFIG_PACKAGE_luci-i18n-wireguard-zh-cn=y" >> .config
+          # VPN - Tailscale
+          echo "CONFIG_PACKAGE_tailscale=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-tailscale=y" >> .config
+          echo "CONFIG_PACKAGE_luci-i18n-tailscale-zh-cn=y" >> .config
           make defconfig
 
       - name: Download Packages
