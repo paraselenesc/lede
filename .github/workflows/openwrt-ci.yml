@@ -156,28 +156,57 @@ jobs:
           du -h --max-depth=1 ./build_dir
           du -h --max-depth=1 ./bin
 
-      - name: Prepare artifact
+      - name: Prepare Artifacts
         run: |
-          mkdir -p ./artifact/package
+          mkdir -p ./artifact/firmware
+          mkdir -p ./artifact/packages
           mkdir -p ./artifact/buildinfo
-          rm -rf $(find ./bin/targets/ -type d -name "packages")
-          cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
-          cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+          
+          # Copy firmware files only (img, sysupgrade, factory)
+          find ./bin/targets/ -type f \( -name "*.img" -o -name "*.img.gz" -o -name "*.sysupgrade" -o -name "*.factory" \) -exec cp {} ./artifact/firmware/ \;
+          
+          # Copy packages
+          find ./bin/packages/ -name "*.ipk" -exec cp {} ./artifact/packages/ \;
+          
+          # Copy build info
+          find ./bin/targets/ -name "*.buildinfo" -o -name "*.manifest" -exec cp {} ./artifact/buildinfo/ \;
+          
+          # Create file lists
+          ls -la ./artifact/firmware/ > ./artifact/firmware/filelist.txt
+          ls -la ./artifact/packages/ > ./artifact/packages/filelist.txt
+          
+          # Create build summary
+          echo "Build Summary:" > ./artifact/build_summary.txt
+          echo "Target: x86_64" >> ./artifact/build_summary.txt
+          echo "Build Date: $(date)" >> ./artifact/build_summary.txt
+          echo "Git Commit: ${{ github.sha }}" >> ./artifact/build_summary.txt
+          echo "Firmware Files: $(ls ./artifact/firmware/*.img* ./artifact/firmware/*.sysupgrade ./artifact/firmware/*.factory 2>/dev/null | wc -l)" >> ./artifact/build_summary.txt
+          echo "Package Files: $(ls ./artifact/packages/*.ipk 2>/dev/null | wc -l)" >> ./artifact/build_summary.txt
 
-      - name: Upload buildinfo
+      - name: Upload Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenWrt_firmware
+          path: ./artifact/firmware/
+          retention-days: 30
+
+      - name: Upload Packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenWrt_packages
+          path: ./artifact/packages/
+          retention-days: 30
+
+      - name: Upload Build Info
         uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_buildinfo
           path: ./artifact/buildinfo/
+          retention-days: 30
 
-      - name: Upload package
+      - name: Upload Build Summary
         uses: actions/upload-artifact@v4
         with:
-          name: OpenWrt_package
-          path: ./artifact/package/
-
-      - name: Upload firmware
-        uses: actions/upload-artifact@v4
-        with:
-          name: OpenWrt_firmware
-          path: ./bin/targets/
+          name: OpenWrt_summary
+          path: ./artifact/build_summary.txt
+          retention-days: 30
