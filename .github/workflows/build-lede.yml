@@ -61,7 +61,8 @@ jobs:
             ./staging_dir
             ./tmp
             ./dl
-          key: ${{ runner.os }}-lede-x86_64-${{ hashFiles('**/Makefile', '**/Config.in') }}
+          # Use commit SHA for cache key to avoid hashFiles timeout on large repos
+          key: ${{ runner.os }}-lede-x86_64-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-lede-x86_64-
             ${{ runner.os }}-lede-
