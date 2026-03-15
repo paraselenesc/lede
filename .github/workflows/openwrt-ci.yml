@@ -71,6 +71,8 @@ jobs:
           echo "CONFIG_TARGET_x86=y" >> .config
           echo "CONFIG_TARGET_x86_64=y" >> .config
           echo "CONFIG_TARGET_x86_64_generic=y" >> .config
+          # Root partition size (2GB)
+          echo "CONFIG_TARGET_ROOTFS_PARTSIZE=2048" >> .config
           # Network drivers
           echo "CONFIG_PACKAGE_kmod-igb=y" >> .config
           echo "CONFIG_PACKAGE_kmod-e1000=y" >> .config
